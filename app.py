@@ -13,7 +13,6 @@ st.set_page_config(
 # Helper Functions
 # -----------------------------
 
-
 def load_file(uploaded_file):
     if uploaded_file.name.endswith('.csv'):
         return pd.read_csv(uploaded_file)
@@ -28,13 +27,17 @@ def extract_proficiency_columns(df):
         if '(Overall score)' in str(col):
             clean_col = str(col)
             match = re.match(
-                r'^(\d+\*?)\.\s*(.*?)\s*\(Overall score\)$',
+                r'^(\d+)\.(\*)?\s*(.*?)\s*\(Overall score\)$',
                 clean_col
             )
 
             if match:
                 prof_number = match.group(1)
-                prof_name = match.group(2)
+
+                if match.group(2):
+                   prof_number += '*'
+
+                prof_name = match.group(3)
 
                 proficiency_columns[col] = {
                     'number': prof_number,
@@ -307,7 +310,10 @@ if uploaded_files:
 
             student_df = combined_df[
                 combined_df['Student'] == selected_student
-            ].sort_values('Proficiency Number', key=lambda x: x.astype(int))
+            ].sort_values(
+                'Proficiency Number',
+                key=lambda x: x.str.replace('*', '', regex=False).astype(int)
+            )
 
             met_total = student_df['Met'].sum()
             overall_total = len(student_df)
@@ -345,6 +351,20 @@ if uploaded_files:
 
             matrix, display_matrix, manual_matrix = create_matrix(combined_df)
 
+            st.info(
+                "⭐ Proficiencies marked with a star "
+                "may be completed next year."
+            )
+
+
+            # Replace asterisk with star indicator
+            display_matrix.columns = [
+                f"⭐ {str(col).replace('*', '')}"
+                if "*" in str(col)
+                else str(col)
+                for col in display_matrix.columns
+            ]
+
             search = st.text_input("Search student")
 
             filtered_matrix = display_matrix.copy()
@@ -377,8 +397,11 @@ if uploaded_files:
                 'Proficiency Name'
             ]].drop_duplicates()
 
+
             prof_options['Sort'] = (
                 prof_options['Proficiency Number']
+                .astype(str)
+                .str.replace('*', '', regex=False)
                 .astype(int)
             )
 
