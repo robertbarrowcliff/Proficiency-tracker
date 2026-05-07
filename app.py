@@ -28,7 +28,10 @@ def extract_proficiency_columns(df):
     for col in df.columns:
         if '(Overall score)' in str(col):
             clean_col = str(col)
-            match = re.match(r'^(\d+\*?)\.\s*(.*?)\s*\(Overall score\)$', clean_col)
+            match = re.match(
+                r'^(\d+\*?)\.\s*(.*?)\s*\(Overall score\)$',
+                clean_col
+            )
 
             if match:
                 prof_number = match.group(1)
