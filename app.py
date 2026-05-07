@@ -13,7 +13,6 @@ st.set_page_config(
 # Helper Functions
 # -----------------------------
 
-@st.cache_data
 
 def load_file(uploaded_file):
     if uploaded_file.name.endswith('.csv'):
